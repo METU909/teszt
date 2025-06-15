@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Társadalomismeret Teszt</title>
+<style>
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: #f4f4f9;
+        color: #333;
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+    }
+    #quiz-container {
+        background: #fff;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 800px;
+    }
+    h1 {
+        color: #5a67d8;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .question-block {
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .question-block:last-of-type {
+        border-bottom: none;
+    }
+    p.question {
+        font-weight: bold;
+        font-size: 1.1em;
+        margin-bottom: 15px;
+    }
+    .answers label {
+        display: block;
+        margin: 5px 0;
+        padding: 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    .answers label:hover {
+        background-color: #e2e8f0;
+    }
+    input[type="radio"] {
+        margin-right: 10px;
+    }
+    #submit-btn {
+        display: block;
+        width: 100%;
+        padding: 15px;
+        background-color: #5a67d8;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 1.2em;
+        cursor: pointer;
+        margin-top: 20px;
+        transition: background-color 0.3s;
+    }
+    #submit-btn:hover {
+        background-color: #434190;
+    }
+    #results {
+        text-align: center;
+        padding: 20px;
+        margin-top: 20px;
+        border-radius: 10px;
+        font-size: 1.2em;
+    }
+    .grade-2 { background-color: #fefcbf; border: 1px solid #faf089; }
+    .grade-3 { background-color: #fed7d7; border: 1px solid #f56565; }
+    .grade-4 { background-color: #c6f6d5; border: 1px solid #68d391; }
+    .grade-5 { background-color: #bee3f8; border: 1px solid #63b3ed; }
+    .grade-1 { background-color: #fde2e2; border: 1px solid #ff9e9e; }
+
+    /* Styles for marking answers */
+    .incorrect-answer-label {
+        background-color: #f8d7da; /* Light red for incorrect selected */
+        border: 1px solid #dc3545; /* Red border */
+    }
+    .correct-answer-feedback {
+        color: #28a745; /* Green text for correct answer feedback */
+        font-weight: bold;
+        margin-top: 5px;
+        display: block;
+    }
+</style>
+</head>
+<body>
+
+<div id="quiz-container">
+    <h1>Társadalomismeret Teszt</h1>
+    <form id="quiz-form">
+        <div id="questions-wrapper"></div>
+        <button type="submit" id="submit-btn">Teszt kiértékelése</button>
+    </form>
+    <div id="results" style="display:none;"></div>
+</div>
+
+<script>
+const allQuestions = [
+    { question: "Ki nem köthető a liberalizmus ideológiájához?", options: ["Möser", "John Locke", "Adam Smith", "John Stuart Mill"], answer: "Möser" },
+    { question: "Mi jellemző a konzervativizmusra?", options: ["Közösségelvűség", "Társadalmi forradalom támogatása", "Teljes vallási semlegesség", "Individualizmus"], answer: "Közösségelvűség" },
+    { question: "Melyik kormányzati rendszer altípusa a kancellári?", options: ["Parlamentáris", "Prezidenciális", "Direktdemokratikus", "Föderális"], answer: "Parlamentáris" },
+    { question: "Melyik ország számít kakukktojásnak az alkotmánybíróságok tipologizációja során?", options: ["Svájc", "Németország", "Olaszország", "Spanyolország"], answer: "Svájc" },
+    { question: "Milyen feladat, funkció HAMIS az országgyűlések működésére?", options: ["Politikusok szocializációs közege", "Törvényhozás", "Kormány ellenőrzése", "Költségvetés elfogadása"], answer: "Politikusok szocializációs közege" },
+    { question: "Mi igaz a magyar államfőre?", options: ["Csak 2/3-os többséggel dönthetünk a személyéről", "Ő nevezi ki az országgyűlés elnökét", "Közvetlenül választják", "Egyszerű többséggel is megválasztható"], answer: "Csak 2/3-os többséggel dönthetünk a személyéről" },
+    { question: "Milyen gyűjtőfogalom alá csoportosíthatjuk a következőket: munkahely, család, oktatási intézmények, egyházi intézmények?", options: ["Szocializációs ágensek", "Hatalmi ágak", "Képviseleti szervek", "Közjogi intézmények"], answer: "Szocializációs ágensek" },
+    { question: "Mi NEM igaz a jelenlegi magyar választási rendszerrel kapcsolatban?", options: ["4 %-ot elérő pártok bejutnak listán az országgyűlésbe", "Egyéni és listás szavazatok is vannak", "A kompenzációs lista működik", "Az 5 %-os küszöb a belépési feltétel"], answer: "4 %-ot elérő pártok bejutnak listán az országgyűlésbe" },
+    { question: "Melyik ideológiára jellemző? etatizmus, korporativizmus, antiracionalizmus?", options: ["Fasizmus", "Liberalizmus", "Anarchizmus", "Kommunizmus"], answer: "Fasizmus" },
+    { question: "Mi nem jellemző a populizmusra?", options: ["Antiracionalizmus", "Közvetlen demokrácia preferálása", "A nép akaratának hangsúlyozása", "Elitellenesség"], answer: "Antiracionalizmus" },
+    { question: "Melyik ideológia harcosa volt Alexander Bakunyin?", options: ["Anarchizmus", "Kommunizmus", "Liberalizmus", "Fasizmus"], answer: "Anarchizmus" },
+    { question: "Melyik országban működik félelnöki rendszer?", options: ["Franciaország", "Németország", "Olaszország", "Egyesült Királyság"], answer: "Franciaország" },
+    { question: "Melyik funkcióval nem bírnak sohasem az alkotmánybíróságok?", options: ["Pozitív jogalkotó", "Előzetes normakontroll", "Utólagos normakontroll", "Alaptörvény értelmezése"], answer: "Pozitív jogalkotó" },
+    { question: "Hány fős a magyar országgyűlés 2014 óta?", options: ["199", "386", "210", "215"], answer: "199" },
+    { question: "Mi nem igaz a magyar köztársasági elnökre?", options: ["Bármikor feloszlathatja az országgyűlést", "Az Országgyűlés választja meg", "Legfeljebb két ciklust tölthet be", "Javaslatot tehet miniszterelnök személyére"], answer: "Bármikor feloszlathatja az országgyűlést" },
+    { question: "Mi HAMIS a jelenlegi magyar alkotmánybíróságra?", options: ["A bírák mandátuma meghosszabbítható", "15 tagból áll", "A bírák megválasztásához kétharmados többség kell", "Alkotmányjogi panasszal fordulhatunk hozzájuk"], answer: "A bírák mandátuma meghosszabbítható" },
+    { question: "Melyik párt nem tartozik a jobboldali pártcsaládba?", options: ["Szociáldemokrata", "Fidesz", "KDNP", "Republikanus párt (USA)"], answer: "Szociáldemokrata" },
+    { question: "Mi jellemző a domináns pártrendszerre?", options: ["Legalább 3 választási győzelem zsinórban", "Nincs parlamenti ellenzék", "Kétpárti versengés", "Egypártrendszer jellemző"], answer: "Legalább 3 választási győzelem zsinórban" },
+    { question: "Melyik állítás igaz?", options: ["Jelenleg 93 listás mandátumot osztanak ki", "Csak egyéni körzetekben lehet mandátumot szerezni", "Nincs lista a választáson", "A listás mandátumok száma meghaladja a 150-et"], answer: "Jelenleg 93 listás mandátumot osztanak ki" },
+    { question: "Mióta lehet a másik fél vétkessége nélkül is elválni Magyarországon?", options: ["1950-es évek óta", "Soha", "2010 óta", "1990-es évek óta"], answer: "1950-es évek óta" },
+    { question: "Melyik állítás igaz a jelenlegi fővárosi közgyűlésre?", options: ["Tagjai a kerületi polgármesterek és főpolgármester is", "Minden budapesti lakos automatikus tagja", "Csak pártok delegálják a tagokat", "A tagokat közvetlenül az Országgyűlés nevezi ki"], answer: "Tagjai a kerületi polgármesterek és főpolgármester is" },
+    { question: "Mi igaz a konstruktív bizalmatlansági indítványra?", options: ["Az új kormányfő megválasztásáról és a régi leváltásáról egyszerre döntenek", "Csak a kormány leváltására irányul", "Csak köztársasági elnök kezdeményezheti", "Népszavazás szükséges hozzá"], answer: "Az új kormányfő megválasztásáról és a régi leváltásáról egyszerre döntenek" },
+    { question: "Mi nem igaz a liberalizmus eszméjére?", options: ["Antropológiai pesszimizmus", "Egyéni szabadságjogok elsődlegessége", "A szabad piac támogatása", "Jogegyenlőség"], answer: "Antropológiai pesszimizmus" },
+    { question: "Melyik fő típusba tartozik a magyar országgyűlési választási rendszer?", options: ["Vegyes", "Tiszta arányos", "Többségi (majoritárius)", "Direktdemokratikus"], answer: "Vegyes" },
+    { question: "Mit jelent a poligínia?", options: ["Egy férjnek több felesége van", "Egy nőnek több férje van", "Több férj és több feleség él együtt", "Egy személy semmilyen házasságban nem vehet részt"], answer: "Egy férjnek több felesége van" },
+    { question: "Melyik ideológiához köthető Edmund Burke?", options: ["Konzervativizmus", "Szocializmus", "Anarchizmus", "Liberalizmus"], answer: "Konzervativizmus" },
+    { question: "Melyik párt NEM tartozik a jobboldali pártcsaládba?", options: ["Szociáldemokraták", "KDNP", "Fidesz", "Lengyel Jog és Igazságosság Pártja"], answer: "Szociáldemokraták" },
+    { question: "Melyik a pártok fejlődéstörténetében a legkorábbi típus?", options: ["Protopárt (honoráciorpárt)", "Modern tömegpárt", "Catch-all párt", "Médiapárt"], answer: "Protopárt (honoráciorpárt)" },
+    { question: "Melyik országban van a köztársasági elnöknek a miniszterelnöknél szélesebb hatalmi jogosítványa?", options: ["Franciaország", "Magyarország", "Németország", "Spanyolország"], answer: "Franciaország" },
+    { question: "Melyik állítás igaz?", options: ["A populisták szeretik alkalmazni a közvetlen demokráciát.", "A populisták mindig az elit érdekét képviselik", "A populisták elutasítják a választásokat", "A populizmus kizárólag parlamenti demokráciában létezik"], answer: "A populisták szeretik alkalmazni a közvetlen demokráciát." },
+    { question: "Mi nem jellemzi a fasizmust?", options: ["Antiliberalizmus", "Autoriter vezetés", "Nacionalizmus", "Militarizmus"], answer: "Antiliberalizmus" },
+    { question: "Melyik két ideológiára jellemző a kollektivizmus?", options: ["Fasizmus és kommunizmus", "Liberalizmus és konzervativizmus", "Anarchizmus és liberalizmus", "Szocializmus és neoliberalizmus"], answer: "Fasizmus és kommunizmus" },
+    { question: "Melyik országra jellemző az ún. kétpártrendszer?", options: ["Nagy-Britannia", "Franciaország", "Németország", "Svédország"], answer: "Nagy-Britannia" },
+    { question: "Időben a pártoknak melyik a legkorábbi fejlődés?", options: ["Protopártok", "Modern médiapártok", "Képviseleti pártok", "Ideológiai tömegpártok"], answer: "Protopártok" },
+    { question: "Melyik állítás hamis a magyar politikai intézményrendszerre?", options: ["Az alkotmánybírák mandátumát 12-ről 9 évre csökkentették", "Az alkotmánybírák számát 15 főre emelték", "Az államfő posztját legfeljebb két ciklusban lehet betölteni", "Az Alkotmánybíróság nem rendelkezik törvényalkotói jogkörrel"], answer: "Az alkotmánybírák mandátumát 12-ről 9 évre csökkentették" },
+    { question: "Melyik állítás igaz a magyar alkotmányos intézmények esetén?", options: ["Az alkotmánybíróság elnökét az Országgyűlés választja meg", "A miniszterelnök nevezi ki az AB elnökét", "Az AB elnökét a bírák választják egymás közül", "A köztársasági elnök javaslatára választják a bírák"], answer: "Az alkotmánybíróság elnökét az Országgyűlés választja meg" },
+    { question: "Mi nem szinoním fogalompár?", options: ["Törvényhozás és törvénykezés", "Kormányfő és miniszterelnök", "Államfő és köztársasági elnök", "Parlament és országgyűlés"], answer: "Törvényhozás és törvénykezés" },
+    { question: "Melyik állítás hamis?", options: ["László, Kozma Ákos és Sulyok Tamás is az Alkotmánybíróság elnökei", "Sulyok Tamás volt az Alkotmánybíróság elnöke", "Kozma Ákos jelenleg az alapvető jogok biztosa", "Az Alkotmánybíróság elnökét az Országgyűlés választja"], answer: "László, Kozma Ákos és Sulyok Tamás is az Alkotmánybíróság elnökei" },
+    { question: "Mi maradt állandó az új alaptörvény bevezetését követően a korábbiakhoz képest Magyarországon?", options: ["parlamenti bejutási küszöb", "az alkotmánybírák száma", "az egyéni választókörzetek száma az országgyűlési választásokon", "a fordulók száma az országgyűlési választásokon"], answer: "parlamenti bejutási küszöb" },
+    { question: "Kik nem választhatóak jelenleg újra Magyarországon?", options: ["az alkotmánybírák", "miniszterelnök", "köztársasági elnök", "az országgyűlési képviselők"], answer: "az alkotmánybírák" },
+    { question: "Melyik országban vegyes a választási rendszer?", options: ["Magyarország", "Nagy-britannia", "USA", "Franciaország"], answer: "Magyarország" },
+    { question: "Mi nem tartozik az alkotmánybíróság jogköreihez jelenleg?", options: ["alkotmányellenes kormányrendelet felülírása törvénnyel", "bírói döntés felülvizsgálata alkotmányjogi panasz alapján", "előzetes normakontroll", "utólagos normakontroll"], answer: "alkotmányellenes kormányrendelet felülírása törvénnyel" },
+    { question: "Mi nem tartozik az érdekérvényesítés legfontosabb formái közé?", options: ["poliarchia", "politikai tiltakozások", "lobbizás", "parlamenti képviselet"], answer: "poliarchia" },
+    { question: "Melyik állítás igaz az arányos választási rendszerre?", options: ["csak listára lehet szavazni", "csak egyéni képviselőjelöltekre lehet szavazni", "listára és egyéni jelöltekre is lehet szavazni", "USA-ban ilyen működik"], answer: "csak listára lehet szavazni" },
+    { question: "Melyik nem tartozik a modern pártok funkciói közé?", options: ["a konstruktív kollaboratív funkció", "a politikai vezetők kiválasztása, rekrutációja", "a döntési funkció", "a kormányzati funkció"], answer: "a konstruktív kollaboratív funkció" },
+    { question: "Melyik nem aktív eleme a választási rendszereinknek, melyik a kakukktojás?", options: ["750 ajánlószelvény", "közvetlen polgármesterválasztás", "93 listás mandátum az országgyűlési választáson", "egyéni listás rendszer"], answer: "750 ajánlószelvény" },
+    { question: "Melyik állítás hamis?", options: ["az 1000 fő alatti településeken a polgármestert közvetve választják", "az önkormányzati választásokon 10ezer fő alatti településeken másképp működik a választási rendszer, mint az annál nagyobb településeken", "a legkissebb településeken annyi szavazatunk van a képviselőtestület megválasztásánál, ahány tagja van a testületnek", "Budapesten 33 tagja van a fővárosi közgyűlésnek"], answer: "az 1000 fő alatti településeken a polgármestert közvetve választják" },
+    { question: "Milyen feladat, funkció nem igaz az országgyűlések működésére?", options: ["legfontosabb feladatai közé tartozik a törvénykezés", "ellenőrzi a kormányzatot", "a politikusok szocializációs közege", "egyes közjogi méltóságok megválasztása"], answer: "legfontosabb feladatai közé tartozik a törvénykezés" },
+    { question: "Milyen gyűjtőfogalom alá csoportosíthatjuk a következőket: munkahely, család, oktatási intézmények, egyházi intézmények?", options: ["Szocializációs ágensek", "alkotmányos intézmények", "politikai aktorok", "hatalommegosztás intézményei"], answer: "Szocializációs ágensek" },
+    { question: "Mi nem tartozik a törvényhozás legfontosabb funkciói közé?", options: ["likviditási funkció", "legitimációs funkció", "végrehajtás ellenőrzésének funkciója", "rekrutációs funkció"], answer: "likviditási funkció" },
+    { question: "Mi nem szinoním fogalompár?", options: ["Törvényhozás és törvénykezés", "Államfő és köztársasági elnök", "kormányfő és miniszterelnök", "Ombudsman és alapvető jogok biztosa"], answer: "Törvényhozás és törvénykezés" },
+    { question: "Melyik állítás hamis?", options: ["A kormányfőt a köztársasági elnök nevezi ki és iktatja be a hivatalába", "Az alkotmánybíróság elnökét korábban bírák maguk közül, jelenleg az Országgyűlés választja meg", "Magyarországon az összes alkotmánybírót az Országgyűlés választja meg", "Az államfőről szóló szavazás második fordulójában jelenleg elég a képviselők felének szavazata"], answer: "A kormányfőt a köztársasági elnök nevezi ki és iktatja be a hivatalába" },
+    { question: "Melyik állítás igaz a magyar alkotmányos intézmények esetében?", options: ["az alkotmánybíróság elnökét az Országgyűlés választja meg", "Az alkotmánybírók megválasztásához elegendő a feles többség", "Az államfő megválasztásához minden esetben kétharmados többség kell", "a miniszterelnökké választás előfeltétele a 45. életév betöltése"], answer: "az alkotmánybíróság elnökét az Országgyűlés választja meg" },
+    { question: "Időben a pártoknak melyik a legkorábbi fejlődési típusa?", options: ["Protopártok", "modern tömegpártok", "Catch all pártok", "Médiapártok"], answer: "Protopártok" },
+    { question: "Melyik állítás hamis a magyar politikai intézményrendszer esetében?", options: ["Az alkotmánybírák mandátumát 12-ről 9 évre csökkentették 2012 után.", "Az államfő posztot legfeljebb 10 évig lehet betölteni", "Az államfő választás előfeltétele a 35. életév betöltése", "Az alkotmánybíróság létszáma 11-ről 15 főre nőtt 2012 után."], answer: "Az alkotmánybírák mandátumát 12-ről 9 évre csökkentették 2012 után." }
+];
+
+let selectedQuestions = [];
+
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+function displayQuestions() {
+    shuffleArray(allQuestions);
+    selectedQuestions = allQuestions.slice(0, 30);
+    
+    const questionsWrapper = document.getElementById('questions-wrapper');
+    questionsWrapper.innerHTML = '';
+    
+    selectedQuestions.forEach((q, index) => {
+        const questionBlock = document.createElement('div');
+        questionBlock.className = 'question-block';
+
+        const questionText = document.createElement('p');
+        questionText.className = 'question';
+        questionText.textContent = `${index + 1}. ${q.question}`;
+        questionBlock.appendChild(questionText);
+
+        const answersDiv = document.createElement('div');
+        answersDiv.className = 'answers';
+        
+        const answerOptions = [...q.options];
+        shuffleArray(answerOptions);
+
+        answerOptions.forEach(option => {
+            const label = document.createElement('label');
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = `question${index}`;
+            radio.value = option;
+            radio.required = true;
+            // No need for data-correct attribute if we're only marking incorrect
+
+            label.appendChild(radio);
+            label.appendChild(document.createTextNode(` ${option}`));
+            answersDiv.appendChild(label);
+        });
+
+        questionBlock.appendChild(answersDiv);
+        questionsWrapper.appendChild(questionBlock);
+    });
+}
+
+document.getElementById('quiz-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    let score = 0;
+    selectedQuestions.forEach((q, index) => {
+        const selectedRadio = document.querySelector(`input[name="question${index}"]:checked`);
+        const allRadiosInQuestion = document.querySelectorAll(`input[name="question${index}"]`);
+        const questionBlock = selectedRadio ? selectedRadio.closest('.question-block') : null;
+
+        allRadiosInQuestion.forEach(radio => {
+            radio.disabled = true; // Disable all radio buttons after submission
+        });
+
+        if (selectedRadio && selectedRadio.value === q.answer) {
+            score++;
+        } else {
+            // Mark the selected incorrect answer
+            if (selectedRadio) {
+                selectedRadio.parentElement.classList.add('incorrect-answer-label');
+            }
+
+            // Display the correct answer below the question
+            if (questionBlock) {
+                const correctAnswerFeedback = document.createElement('span');
+                correctAnswerFeedback.classList.add('correct-answer-feedback');
+                correctAnswerFeedback.textContent = `Helyes válasz: ${q.answer}`;
+                questionBlock.appendChild(correctAnswerFeedback);
+            }
+        }
+    });
+
+    const totalQuestions = selectedQuestions.length;
+    const percentage = (score / totalQuestions) * 100;
+    
+    let grade;
+    let gradeClass;
+
+    if (percentage >= 90) {
+        grade = '(5)';
+        gradeClass = 'grade-5';
+    } else if (percentage >= 80) {
+        grade = '(4)';
+        gradeClass = 'grade-4';
+    } else if (percentage >= 70) {
+        grade = '(3)';
+        gradeClass = 'grade-3';
+    } else if (percentage >= 60) {
+        grade = '(2)';
+        gradeClass = 'grade-2';
+    } else {
+        grade = '(1) - Nem felelt meg';
+        gradeClass = 'grade-1';
+    }
+
+    const resultsDiv = document.getElementById('results');
+    resultsDiv.innerHTML = `
+        <h3>Eredmény</h3>
+        <p>Helyes válaszok: ${score} / ${totalQuestions}</p>
+        <p>Százalékos arány: ${percentage.toFixed(2)}%</p>
+        <p><strong>Érdemjegy: ${grade}</strong></p>
+    `;
+    resultsDiv.className = '';
+    resultsDiv.classList.add(gradeClass);
+    resultsDiv.style.display = 'block';
+
+    document.getElementById('submit-btn').style.display = 'none';
+    window.scrollTo(0, document.body.scrollHeight);
+});
+
+// Init
+displayQuestions();
+</script>
+
+</body>
+</html>
